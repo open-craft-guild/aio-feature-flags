@@ -1,0 +1,251 @@
+minimum-vagga: v0.7.0
+containers:
+  app-freezer:
+    setup:
+    - !Alpine v3.5
+    # freeze common deps versions:
+    - !Py3Install
+      - aiohttp >=2.0,<2.1
+      # - aioredis >=0.3, <0.4
+      - aio-manager[mysql] >=2.0,<2.1
+      - aiomysql <1.0.0
+      - aio-yamlconfig >=0.2,<0.3
+    - !Sh pip3 freeze | sed 's/^aio-manager/aio-manager\[mysql\]/g' > requirements/common.txt
+    - !Sh pip3 uninstall -y -r requirements/common.txt
+    # freeze linter manager version:
+    - !Py3Install
+      - pre-commit >=0.12,<0.13
+    - !Sh pip3 freeze > requirements/linters.txt
+    - !Sh pip3 uninstall -y -r requirements/linters.txt
+    # At this point we can install dependencies freely
+    - !PipConfig
+      dependencies: true
+    - !Py3Install
+      - setuptools
+    - !Sh python3 -c "from setuptools import __name__, __version__; print('=='.join((__name__, __version__)))" >> requirements/common.txt
+    # Generate constraints, which keep version of every each implicit dependency
+    - !Py3Requirements requirements/common.txt
+    - !Py3Requirements requirements/linters.txt
+    - !Sh pip3 freeze > requirements/constraints.txt
+    - !Sh python3 -c "from setuptools import __name__, __version__; print('=='.join((__name__, __version__)))" >> requirements/constraints.txt
+
+  features:
+    environ: &env_vars
+      APP_NAME: Feature Flags microservice
+      APP_PORT: 8081
+      # Ref:
+      # github.com/pre-commit/pre-commit-hooks/pull/161#issuecomment-269662841
+      LANG: en_US.UTF-8
+      DB_DATABASE: features
+      DB_USERNAME: mysql
+      DB_PASSWORD: mysql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3308
+    setup:
+    - !Env
+      <<: *env_vars
+    - !Ubuntu xenial
+    - !UbuntuUniverse
+    # Add PPA exposing Python 3.6
+    - !AptTrust keys: [F06FC659]
+    # Ref: ubuntumaniac.com/2016/12/python-360-is-released-install-on.html
+    - !UbuntuPPA jonathonf/python-3.6
+    - &app-build-deps !BuildDeps [python3.6-dev]
+    - !Install [ca-certificates, mysql-client, &python_ver python3.6]
+    - !Sh ln -sf /usr/bin/python3.6m /usr/bin/python3m
+    - !Sh ln -sf /usr/bin/python3.6 /usr/bin/python3
+    - !Sh ln -sf /usr/bin/python3 /usr/bin/python
+    - !PipConfig
+      # Don't install python3.5
+      install-python: false
+      dependencies: true
+      # It doesn't seem to locate python3.6 if python-exe isn't specified
+      python-exe: *python_ver
+    - !Py3Requirements requirements/common.txt
+    - !Py3Install
+      - ipdb
+
+  mysql:
+    environ:
+      <<: *env_vars
+      DB_DATA_DIR: /data
+    setup:
+    - !Env
+      <<: *env_vars
+    - !Alpine v3.5
+    - !Install
+      - mariadb
+      - mariadb-client
+    - !EnsureDir /data
+    - !EnsureDir /run
+    volumes:
+      /data: !Persistent
+        name: mysql-data
+        init-command: _init-mysql
+      /run: !Tmpfs
+        mode: 0o766
+        subdirs:
+          mysqld:
+
+  test:
+    environ:
+      <<: *env_vars
+    setup:
+    - !Env
+      <<: *env_vars
+    - !Container features
+    - !BuildDeps *app-build-deps
+    # Git is needed for pre-commit in runtime. Ref:
+    # github.com/pre-commit/pre-commit/issues/456#issuecomment-269653630
+    - !Install [git]
+    - !Py3Requirements requirements/linters.txt
+    - !Sh HOME=/root pre-commit install-hooks
+
+commands:
+  _init-mysql: !Command
+    description: Initialize mysql database
+    container: mysql
+    run: |
+      wait_for() {
+        local criteria=$1
+        local file_path=$2
+        while [ ! -$criteria "$file_path" ]
+        do
+          sleep .2
+        done
+      }
+      mysql_install_db --datadir=$DB_DATA_DIR
+      mysqld_safe --user=root --datadir=$DB_DATA_DIR \
+                  --bind-address=$DB_HOST --port=$DB_PORT \
+                  --no-auto-restart --no-watch
+      wait_for S /run/mysqld/mysqld.sock  # wait for server to be ready
+      mysqladmin create $DB_DATABASE
+      mysql -e "CREATE USER '$DB_USERNAME'@'localhost' IDENTIFIED BY '$DB_PASSWORD';"
+      mysql -e "GRANT ALL PRIVILEGES ON $DB_DATABASE.* TO '$DB_USERNAME'@'localhost';"
+      mysql -e "FLUSH PRIVILEGES;"
+
+  clean-db: !Command
+    description: Cleanup mysql database
+    container: mysql
+    run: |
+      wait_for() {
+        local criteria=$1
+        local file_path=$2
+        while [ ! -$criteria "$file_path" ]
+        do
+          sleep .2
+        done
+      }
+      mysql_install_db --datadir=$DB_DATA_DIR
+      mysqld_safe --user=root --datadir=$DB_DATA_DIR \
+                  --bind-address=$DB_HOST --port=$DB_PORT \
+                  --no-auto-restart --no-watch
+      wait_for S /run/mysqld/mysqld.sock  # wait for server to be ready
+      mysqladmin -f drop "$DB_DATABASE"
+      mysqladmin create "$DB_DATABASE"
+      mysql -e "GRANT ALL PRIVILEGES ON $DB_DATABASE.* TO '$DB_USERNAME'@'localhost';"
+      mysql -e "FLUSH PRIVILEGES;"
+
+  manage.py: !Command
+    description: |
+      Run manage.py command (you have to provide command and arguments by yourself)
+    container: features
+    run: [ python3, manage.py ]
+
+  mysql: !Command
+    description: Run RDBMS shell
+    container: mysql
+    run: |
+      wait_for() {
+        local criteria=$1
+        local file_path=$2
+        while [ ! -$criteria "$file_path" ]
+        do
+          sleep .2
+        done
+      }
+      mysqld_safe --user=root --datadir=$DB_DATA_DIR \
+                  --bind-address=$DB_HOST --port=$DB_PORT \
+                  --no-auto-restart --no-watch
+      wait_for S /run/mysqld/mysqld.sock  # wait for server to be ready
+      mysql -D $DB_DATABASE
+
+  run: !Supervise
+    description: Run application in development mode
+    epilog: |
+        --------------------------------------------------------
+        This command runs mysql along with aiohttp app
+    mode: stop-on-failure
+    children:
+      run-app: !Command
+        container: features
+        run: |
+          wait_for() {
+            local criteria=$1
+            local file_path=$2
+            while [ ! -$criteria "$file_path" ]
+            do
+              sleep .2
+            done
+          }
+          touch /work/.dbcreation  # Create lock file
+          wait_for f /work/.dbcreation # Acquire lock
+          #current_version=$(alembic -c config/alembic.ini -x environment=dev current)
+          #head_version=$(alembic -c config/alembic.ini -x environment=dev heads)
+          #if [ "${current_version}" != "${head_version}" ]; then
+          #  alembic -c config/alembic.ini -x environment=dev upgrade head
+          #fi
+          #if [ -z "${current_version}" ]; then
+          #  load_gdg_fixtures "$DATABASE_URL" src/GDGUkraine/fixtures/fixtures.yaml || exit 1
+          #fi
+          sleep 1
+          ./manage.py run_server --port $APP_PORT
+
+      run-db: !Command
+        container: mysql
+        run: |
+          sleep() {
+              # coreutils sleep polyfill for busybox
+              local sleep_duration="$1"
+              local SLEEP_EXE=/bin/sleep
+              $SLEEP_EXE --version &>/dev/null
+              if [ ! -z $? ]
+              then
+                local is_busybox=true
+              else
+                local is_busybox=false
+              fi
+              if [[ $is_busybox == true && $sleep_duration == 'infinity' ]]
+              then
+                while :  # Emulate infinite loop
+                do
+                  $SLEEP_EXE 1d
+                done
+              else
+                $SLEEP_EXE $sleep_duration
+              fi
+          }
+          wait_for() {
+            local criteria=$1
+            local file_path=$2
+            while [ ! -$criteria "$file_path" ]
+            do
+              sleep .2
+            done
+          }
+          mysqld_safe --user=root --datadir=$DB_DATA_DIR \
+                      --bind-address=$DB_HOST --port=$DB_PORT \
+                      --no-auto-restart --no-watch
+          wait_for S /run/mysqld/mysqld.sock  # wait for server to be ready
+          rm -f /work/.dbcreation  # Release lock
+          sleep infinity
+
+  pre-commit: !Command
+    description: Run pre-commit
+    container: test
+    run: [pre-commit]
+
+  lint: !Command
+    description: Run pre-commit for against the repo
+    container: test
+    run: pre-commit run --all-files
