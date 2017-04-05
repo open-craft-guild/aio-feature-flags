@@ -32,6 +32,6 @@ async  def build_application():
     )
     # app['declarative_base'] = Base
 
-    app.router.add_route('*', r'/api/v1/features/', Index.index)
+    app.router.add_route('*', r'/api/v1/features/', Index)
 
     return app
