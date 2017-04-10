@@ -13,13 +13,13 @@ BASE_DIR = os.path.dirname(__file__)
 CONFIG_FILE = os.path.join(BASE_DIR, 'config.yaml')
 
 
-async  def build_application():
+async def build_application():
     loop = asyncio.get_event_loop()
     app = Application(loop=loop)
 
     await aio_yamlconfig.setup(app,
                                config_files=[CONFIG_FILE],
-                               # trafaret_validator=CONFIG_TRAFARET,
+                               trafaret_validator=CONFIG_TRAFARET,
                                base_dir=BASE_DIR)
 
     app['db_engine'] = await create_engine(
