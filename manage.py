@@ -6,6 +6,8 @@ from aio_manager.commands.ext import sqlalchemy
 
 from feature_api.app import build_application
 
+_logger = logging.getLogger(__name__)
+
 async def main():
     logging.basicConfig(level=logging.WARNING)
 
@@ -23,4 +25,6 @@ async def main():
                 port=app.config['DATABASE_PORT']
              )
     )
+    _logger.info('SQLAlchemy manager extention configured.')
+    _logger.info('DB Engine configured.')
     return manager

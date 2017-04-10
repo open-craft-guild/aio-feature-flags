@@ -5,8 +5,8 @@ Base = declarative_base()
 matadata = Base.metadata
 
 
-class Flag(Base):
-    __tablename__ = 'flags'
+class FeatureFlag(Base):
+    __tablename__ = 'feature_flags'
 
     id = Column(Integer(), autoincrement=True, primary_key=True)
 
