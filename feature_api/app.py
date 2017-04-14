@@ -15,6 +15,7 @@ BASE_DIR = os.path.dirname(__file__)
 CONFIG_FILE = os.path.join(BASE_DIR, 'config.yaml')
 _logger = logging.getLogger(__name__)
 
+
 async def build_application():
     loop = asyncio.get_event_loop()
     app = Application(loop=loop)

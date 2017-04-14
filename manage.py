@@ -1,4 +1,3 @@
-import asyncio
 import logging
 
 from aio_manager import Manager
@@ -7,6 +6,7 @@ from aio_manager.commands.ext import sqlalchemy
 from feature_api.app import build_application
 
 _logger = logging.getLogger(__name__)
+
 
 async def main():
     logging.basicConfig(level=logging.WARNING)
