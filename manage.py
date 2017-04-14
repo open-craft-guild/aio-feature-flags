@@ -24,7 +24,7 @@ async def main():
                 db=app.config['DATABASE_NAME'],
                 host=app.config['DATABASE_HOST'],
                 port=app.config['DATABASE_PORT']
-                )
+            )
     )
     _logger.info('SQLAlchemy manager extention configured.')
     return manager
