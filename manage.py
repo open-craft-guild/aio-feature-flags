@@ -1,3 +1,5 @@
+"""Manager script for running the app and utility tasks."""
+
 import logging
 
 from aio_manager import Manager
@@ -9,6 +11,7 @@ _logger = logging.getLogger(__name__)
 
 
 async def main():
+    """Initialize aio_manager instace. It's an entry point function."""
     logging.basicConfig(level=logging.WARNING)
 
     app = await build_application()

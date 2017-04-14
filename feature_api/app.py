@@ -1,3 +1,4 @@
+"""The app configuration module."""
 import asyncio
 import logging
 import os
@@ -17,6 +18,7 @@ _logger = logging.getLogger(__name__)
 
 
 async def build_application():
+    """Create and pre-populate an aiohttp.web.Application instance."""
     loop = asyncio.get_event_loop()
     app = Application(loop=loop)
     _logger.info('App initialized.')

@@ -1,9 +1,15 @@
+"""Collection of HTTP helpers."""
+
 from functools import partial, wraps
 
 from aiohttp.web import json_response
 
 
 def async_json_out(orig_method=None, *, content_type='application/json', **kwargs):
+    """Turn dict output of an HTTP handler into JSON response.
+
+    Decorates aiohttp request handlers.
+    """
     if orig_method is None:
         return partial(async_json_out, content_type='application/json', **kwargs)
 
