@@ -1,6 +1,6 @@
 import asyncio
-import os
 import logging
+import os
 
 from aiohttp.web import Application
 
@@ -18,6 +18,7 @@ _logger = logging.getLogger(__name__)
 async def build_application():
     loop = asyncio.get_event_loop()
     app = Application(loop=loop)
+    _logger.info('App initialized.')
 
     await aio_yamlconfig.setup(app,
                                config_files=[CONFIG_FILE],
@@ -33,7 +34,6 @@ async def build_application():
         echo=True, connect_timeout=5, loop=loop
     )
     app['declarative_base'] = Base
-    _logger.info('App initialized.')
 
     app.router.add_route('*', r'/api/v1/features/', Index)
     _logger.info('Routes configured.')

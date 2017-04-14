@@ -13,6 +13,7 @@ async def main():
 
     app = await build_application()
     manager = Manager(app)
+    _logger.info('DB Engine configured.')
 
     sqlalchemy.configure_manager(
         manager, app, app['declarative_base'],
@@ -23,8 +24,7 @@ async def main():
                 db=app.config['DATABASE_NAME'],
                 host=app.config['DATABASE_HOST'],
                 port=app.config['DATABASE_PORT']
-             )
+                )
     )
     _logger.info('SQLAlchemy manager extention configured.')
-    _logger.info('DB Engine configured.')
     return manager
