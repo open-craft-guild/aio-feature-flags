@@ -1,5 +1,6 @@
 """Manager script for running the app and utility tasks."""
 
+import asyncio
 import logging
 
 from aio_manager import Manager
@@ -31,3 +32,8 @@ async def main():
     )
     _logger.info('SQLAlchemy manager extention configured.')
     return manager
+
+
+if __name__ == '__main__':
+    manager = asyncio.get_event_loop().run_until_complete(main())
+    manager.run()
