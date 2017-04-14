@@ -28,6 +28,7 @@ async def build_application():
                                trafaret_validator=CONFIG_TRAFARET,
                                base_dir=BASE_DIR)
     _logger.info('Config loaded.')
+
     app['db_engine'] = await create_engine(
         user=app.config['DATABASE_USERNAME'],
         password=app.config['DATABASE_PASSWORD'],
@@ -37,6 +38,7 @@ async def build_application():
         echo=True, connect_timeout=5, loop=loop
     )
     app['declarative_base'] = Base
+    _logger.info('DB Engine configured.')
 
     app.router.add_route('*', r'/api/v1/features/', Index)
     _logger.info('Routes configured.')

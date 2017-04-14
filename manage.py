@@ -17,7 +17,6 @@ async def main():
 
     app = await build_application()
     manager = Manager(app)
-    _logger.info('DB Engine configured.')
 
     sqlalchemy.configure_manager(
         manager, app, app['declarative_base'],
