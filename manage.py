@@ -1,3 +1,4 @@
+#! /usr/bin/env python
 """Manager script for running the app and utility tasks."""
 
 import asyncio
