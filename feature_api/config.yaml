@@ -1,0 +1,16 @@
+DEBUG: True
+DATABASE_NAME: !FirstOf
+- !EnvVar DB_DATABASE
+- features
+DATABASE_USERNAME: !FirstOf
+- !EnvVar DB_USERNAME
+- mysql
+DATABASE_PASSWORD: !FirstOf
+- !EnvVar DB_PASSWORD
+- mysql
+DATABASE_HOST: !FirstOf
+- !EnvVar DB_HOST
+- 127.0.0.1
+DATABASE_PORT: !FirstOf
+- !EnvVar DB_PORT
+- 3308
