@@ -1,6 +1,7 @@
 """Collection of HTTP helpers."""
 
 from functools import partial, wraps
+from inspect import iscoroutine
 
 from aiohttp.web import json_response
 
@@ -14,8 +15,12 @@ def async_json_out(orig_method=None, *, content_type='application/json', **kwarg
         return partial(async_json_out, content_type='application/json', **kwargs)
 
     @wraps(orig_method)
-    async def wrapper(request):
-        dict_resp = await orig_method(request)
+    async def wrapper(*args, **kwargs):
+        dict_resp = orig_method(*args, **kwargs)
+
+        if iscoroutine(dict_resp):
+            dict_resp = await dict_resp
+
         return json_response(
             dict_resp,
             content_type=content_type,

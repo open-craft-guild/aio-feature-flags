@@ -9,7 +9,7 @@ class Index(View):
     """Dummy index endpoint."""
 
     @async_json_out
-    async def get(self, request):
+    async def get(self):
         """Return dummy json in response to HTTP GET request."""
         return {'content': 'feature-flags-api'}
 
