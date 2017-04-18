@@ -1,19 +1,14 @@
 """HTTP handlers declarations."""
 
+import logging
+
 from aiohttp.web_urldispatcher import View
 
 from web_utils import async_json_out
 
 from . import extensions
 
-
-class Index(View):
-    """Dummy index endpoint."""
-
-    @async_json_out
-    async def get(self):
-        """Return dummy json in response to HTTP GET request."""
-        return {'content': 'feature-flags-api'}
+_logger = logging.getLogger(__name__)
 
 
 class Flag(View):
@@ -24,7 +19,7 @@ class Flag(View):
         """React for GET request."""
         async with self.request.app['db_engine'].acquire() as conn:
             flags = await extensions.get_flags(conn)
-            return {'items': str(flags)}
+            return {'items': flags}
 
     @async_json_out
     async def post(self):
@@ -34,12 +29,31 @@ class Flag(View):
             try:
                 name = data['name']
                 is_active = data['is_active']
-            except KeyError:
-                return {'info': 'One or more required params is not specified'}
-            # If data is ok - try write it to db
-            try:
                 await extensions.set_flag(conn, name, bool(is_active))
+            except KeyError:
+                _logger.exception('Invalid key parameter.')
+                return {'info': 'One or more required params is not specified'}
             except RuntimeError:
-                return {'info': 'Sorry, there\'s error while writing to db.'}
+                _logger.exception('Error while writing to DB.')
+                return {'info': "Sorry, there's error while writing to db."}
             else:
                 return {'info': 'success'}
+
+
+class GetOneFlag(View):
+    """Work with only one flag not a sequence."""
+
+    @async_json_out
+    async def get(self):
+        """React for GET request."""
+        async with self.request.app['db_engine'].acquire() as conn:
+            name = self.request.match_info['name']
+            try:
+                flag = await extensions.get_flag_by_name(conn, name)
+            except KeyError:
+                _logger.exception('Invalid key parameter.')
+                return {'info': 'No id parameter specified.'}
+            except FileNotFoundError:
+                return {'info': 'No flag found'}
+            else:
+                return {'flag': flag}
