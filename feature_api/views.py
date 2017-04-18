@@ -4,8 +4,8 @@ from aiohttp.web_urldispatcher import View
 
 from web_utils import async_json_out
 
-
 from . import extensions
+
 
 class Index(View):
     """Dummy index endpoint."""
@@ -36,5 +36,10 @@ class Flag(View):
                 is_active = data['is_active']
             except KeyError:
                 return {'info': 'One or more required params is not specified'}
-            await extensions.set_flag(conn, name, bool(is_active))
-            return {'info': 'success'}
+            # If data is ok - try write it to db
+            try:
+                await extensions.set_flag(conn, name, bool(is_active))
+            except RuntimeError:
+                return {'info': 'Sorry, there\'s error while writing to db.'}
+            else:
+                return {'info': 'success'}

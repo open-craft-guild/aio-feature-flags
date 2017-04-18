@@ -40,8 +40,7 @@ async def build_application():
     app['declarative_base'] = Base
     _logger.info('DB Engine configured.')
 
-    app.router.add_route('*', r'/api/v1/features/', Index)
-    app.router.add_route('*', r'/api/v1/flags/', Flag)
+    app.router.add_route('*', r'/api/v1/features/', Flag)
     _logger.info('Routes configured.')
 
     return app
