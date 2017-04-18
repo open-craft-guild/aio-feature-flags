@@ -9,7 +9,7 @@ import aio_yamlconfig
 from aiomysql.sa import create_engine
 
 from .config import CONFIG_TRAFARET
-from .views import Index
+from .views import Index, Flag
 from db.models import Base
 
 BASE_DIR = os.path.dirname(__file__)
@@ -41,6 +41,7 @@ async def build_application():
     _logger.info('DB Engine configured.')
 
     app.router.add_route('*', r'/api/v1/features/', Index)
+    app.router.add_route('*', r'/api/v1/flags/', Flag)
     _logger.info('Routes configured.')
 
     return app
