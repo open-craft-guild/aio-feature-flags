@@ -57,3 +57,26 @@ class GetOneFlag(View):
                 return {'info': 'No flag found'}
             else:
                 return {'flag': flag}
+
+    @async_json_out
+    async def delete(self):
+        name = self.request.match_info['name']
+
+        if not name:
+            return {'info': 'item is not in db'}
+
+        async with self.request.app['db_engine'].acquire() as conn:
+            result = await extensions.delete(conn, name)
+            return {'info': result}
+
+    @async_json_out
+    async def patch(self):
+        name = self.request.match_info['name']
+        data = await self.request.post()
+
+        if not name:
+            return {'info': 'item is not in db'}
+
+        async with self.request.app['db_engine'].acquire() as conn:
+            result = await extensions.update(conn, name, bool(data['is_active']))
+            return {'info': result}

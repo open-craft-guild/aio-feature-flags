@@ -1,5 +1,4 @@
 import logging
-from sqlalchemy.sql import select
 from sqlalchemy import exc
 
 from db.models import FeatureFlag
@@ -7,8 +6,9 @@ from db.models import FeatureFlag
 _logger = logging.getLogger(__name__)
 
 async def get_flags(conn):
+    table = FeatureFlag.__table__
     flags = await conn.execute(
-        select([FeatureFlag.__table__])
+        table.select()
     )
     if not flags:
         return "Sorry, list is empty"
@@ -24,7 +24,7 @@ async def set_flag(conn, name, is_active):
             await conn.execute(FeatureFlag.__table__
                                .insert().values(name=name,
                                                 is_active=is_active))
-        except exc:
+        except Exception:
             _logger.exception('Transaction failed.')
             trans.rollback()
             raise RuntimeError
@@ -33,8 +33,9 @@ async def set_flag(conn, name, is_active):
 
 async def get_flag_by_name(conn, name):
     try:
+        table = FeatureFlag.__table__
         flag = await conn.execute(
-            select([FeatureFlag.__table__]).where(FeatureFlag.name == name)
+            table.select().where(FeatureFlag.name == name)
         )
         result = await flag.fetchone()
         if result is None:
@@ -47,5 +48,20 @@ async def get_flag_by_name(conn, name):
                 'name': result['name'],
                 'is_active': result['is_active']}
 
-async def update_flag(conn, name):
-    return None
+async def delete(conn, name):
+    async with conn.begin():
+        await conn.execute(FeatureFlag.__table__.
+                           delete().
+                           where(FeatureFlag.name == name))
+
+        return 'Done'
+
+async def update(conn, name, is_active):
+    async with conn.begin():
+        await conn.execute(
+                FeatureFlag.__table__.
+                update().
+                where(FeatureFlag.name == name).
+                values({'is_active': is_active})
+        )
+        return 'Done'
