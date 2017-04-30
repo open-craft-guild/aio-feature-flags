@@ -19,9 +19,10 @@ async def get_flags(conn):
 
 
 async def set_flag(conn, name, is_active):
+    table = FeatureFlag.__table__
     async with conn.begin() as trans:
         try:
-            await conn.execute(FeatureFlag.__table__
+            await conn.execute(table
                                .insert().values(name=name,
                                                 is_active=is_active))
         except Exception:
@@ -49,17 +50,19 @@ async def get_flag_by_name(conn, name):
                 'is_active': result['is_active']}
 
 async def delete(conn, name):
+    table = FeatureFlag.__table__
     async with conn.begin():
-        await conn.execute(FeatureFlag.__table__.
+        await conn.execute(table.
                            delete().
                            where(FeatureFlag.name == name))
 
         return 'Done'
 
 async def update(conn, name, is_active):
+    table = FeatureFlag.__table__
     async with conn.begin():
         await conn.execute(
-                FeatureFlag.__table__.
+                table.
                 update().
                 where(FeatureFlag.name == name).
                 values({'is_active': is_active})
