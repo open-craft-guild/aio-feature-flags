@@ -1,0 +1,4 @@
+test:
+  script:
+    #basicly just run pre-commit linters
+    - pre-commit run --all-files
