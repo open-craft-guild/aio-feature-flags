@@ -1,4 +1,4 @@
-image: 3.6.1-alpine
+image: 'python:3.6.1-alpine'
 before_script:
   # installing pre-commit
   - pip install -c requirements/constraints.txt -r requirements/linters.txt -r requirements/common.txt
