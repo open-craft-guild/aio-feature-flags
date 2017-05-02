@@ -1,11 +1,10 @@
 image: 'python:3.6.1'
 before_script:
   # installing pre-commit
-  - 'apk update && apk upgrade && apk add --no-cache git'
   - pip install -c requirements/constraints.txt -r requirements/linters.txt -r requirements/common.txt
-  - HOME=$CI_PROJECT_DIR pre-commit install-hooks
+  - pre-commit install-hooks
 
 test:
   script:
     # basically just run pre-commit linters
-    - HOME=$CI_PROJECT_DIR pre-commit run --all-files
+    - pre-commit run --all-files
