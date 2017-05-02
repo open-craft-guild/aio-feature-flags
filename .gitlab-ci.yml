@@ -1,4 +1,4 @@
-image: 'tailhook/vagga:latest'
+image: 'tailhook/vagga:v0.7.0'
 before_script:
   - vagga _build test
 
