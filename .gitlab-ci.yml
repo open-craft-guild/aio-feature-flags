@@ -1,7 +1,11 @@
-image: 'tailhook/vagga:v0.7.0'
+image: 'python:3.6.1'
 before_script:
-  - vagga _build test
+  # installing pre-commit
+  - 'apk update && apk upgrade && apk add --no-cache git'
+  - pip install -c requirements/constraints.txt -r requirements/linters.txt -r requirements/common.txt
+  - HOME=$CI_PROJECT_DIR pre-commit install-hooks
 
 test:
   script:
-    - vagga lint
+    # basically just run pre-commit linters
+    - HOME=$CI_PROJECT_DIR pre-commit run --all-files
