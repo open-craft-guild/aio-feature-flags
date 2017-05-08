@@ -1,17 +1,17 @@
 import logging
-from sqlalchemy import exc
+
+from aiohttp import web
 
 from db.models import FeatureFlag
 
 _logger = logging.getLogger(__name__)
+table = FeatureFlag.__table__
+
 
 async def get_flags(conn):
-    table = FeatureFlag.__table__
     flags = await conn.execute(
         table.select()
     )
-    if not flags:
-        return "Sorry, list is empty"
     result = await flags.fetchall()
     return [{'id': i['id'],
              'name': i['name'],
@@ -19,47 +19,38 @@ async def get_flags(conn):
 
 
 async def set_flag(conn, name, is_active):
-    table = FeatureFlag.__table__
-    async with conn.begin() as trans:
+    async with conn.begin():
         try:
             await conn.execute(table
                                .insert().values(name=name,
                                                 is_active=is_active))
         except Exception:
             _logger.exception('Transaction failed.')
-            trans.rollback()
             raise RuntimeError
         else:
-            await trans.commit()
+            return {'status_code': 201}
 
 async def get_flag_by_name(conn, name):
-    try:
-        table = FeatureFlag.__table__
-        flag = await conn.execute(
-            table.select().where(FeatureFlag.name == name)
-        )
-        result = await flag.fetchone()
-        if result is None:
-            raise Exception
-    except Exception:
+    flag = await conn.execute(
+        table.select().where(FeatureFlag.name == name)
+    )
+    result = await flag.fetchone()
+    if result is None:
         _logger.exception('Failed while get info from DB.')
-        raise FileNotFoundError
-    else:
-        return {'id': result['id'],
-                'name': result['name'],
-                'is_active': result['is_active']}
+        raise web.HTTPNotFound
+    return {'flag': {'id': result['id'],
+                     'name': result['name'],
+                     'is_active': result['is_active']},
+            'status_code': 200}
 
 async def delete(conn, name):
-    table = FeatureFlag.__table__
     async with conn.begin():
         await conn.execute(table.
                            delete().
                            where(FeatureFlag.name == name))
-
-        return 'Done'
+    return {'status_code': 200}
 
 async def update(conn, name, is_active):
-    table = FeatureFlag.__table__
     async with conn.begin():
         await conn.execute(
                 table.
@@ -67,4 +58,4 @@ async def update(conn, name, is_active):
                 where(FeatureFlag.name == name).
                 values({'is_active': is_active})
         )
-        return 'Done'
+    return {'status_code': 200}

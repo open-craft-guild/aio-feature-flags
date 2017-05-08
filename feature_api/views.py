@@ -2,11 +2,12 @@
 
 import logging
 
+import aiohttp.web as web
 from aiohttp.web_urldispatcher import View
 
 from web_utils import async_json_out
 
-from . import extensions
+from . import data_access
 
 _logger = logging.getLogger(__name__)
 
@@ -16,28 +17,28 @@ class Flag(View):
 
     @async_json_out
     async def get(self):
-        """React for GET request."""
+        """Return list of existed flags."""
         async with self.request.app['db_engine'].acquire() as conn:
-            flags = await extensions.get_flags(conn)
-            return {'items': flags}
+            flags = await data_access.get_flags(conn)
+        return {'items': flags, 'status_code': 200}
 
     @async_json_out
     async def post(self):
-        """React for POST request."""
-        async with self.request.app['db_engine'].acquire() as conn:
+        """Create new flag."""
+        try:
             data = await self.request.post()
-            try:
-                name = data['name']
-                is_active = data['is_active']
-                await extensions.set_flag(conn, name, bool(is_active))
-            except KeyError:
-                _logger.exception('Invalid key parameter.')
-                return {'info': 'One or more required params is not specified'}
-            except RuntimeError:
-                _logger.exception('Error while writing to DB.')
-                return {'info': "Sorry, there's error while writing to db."}
-            else:
-                return {'info': 'success'}
+            name = data['name']
+            is_active = data['is_active']
+            async with self.request.app['db_engine'].acquire() as conn:
+                result = await data_access.set_flag(conn, name, bool(is_active))
+        except KeyError:
+            _logger.exception('Missing key parameter.')
+            return {'status_code': 400}
+        except RuntimeError:
+            _logger.exception('Error while writing to DB.')
+            return {'status_code': 403}
+        else:
+            return result
 
 
 class GetOneFlag(View):
@@ -45,38 +46,41 @@ class GetOneFlag(View):
 
     @async_json_out
     async def get(self):
-        """React for GET request."""
-        async with self.request.app['db_engine'].acquire() as conn:
+        """Return flag by given name."""
+        try:
             name = self.request.match_info['name']
-            try:
-                flag = await extensions.get_flag_by_name(conn, name)
-            except KeyError:
-                _logger.exception('Invalid key parameter.')
-                return {'info': 'No id parameter specified.'}
-            except FileNotFoundError:
-                return {'info': 'No flag found'}
-            else:
-                return {'flag': flag}
+            async with self.request.app['db_engine'].acquire() as conn:
+                flag = await data_access.get_flag_by_name(conn, name)
+        except KeyError:
+            _logger.exception('Missing key parameter.')
+            return {'status_code': 400}
+        except web.HTTPNotFound:
+            return {'status_code': 404}
+        else:
+            return flag
 
     @async_json_out
     async def delete(self):
-        name = self.request.match_info['name']
-
-        if not name:
-            return {'info': 'item is not in db'}
-
-        async with self.request.app['db_engine'].acquire() as conn:
-            result = await extensions.delete(conn, name)
-            return {'info': result}
+        try:
+            name = self.request.match_info['name']
+            async with self.request.app['db_engine'].acquire() as conn:
+                result = await data_access.delete(conn, name)
+        except KeyError:
+            _logger.exception('Missing key parameter.')
+            return {'status_code': 404}
+        else:
+            return result
 
     @async_json_out
     async def patch(self):
-        name = self.request.match_info['name']
-        data = await self.request.post()
-
-        if not name:
-            return {'info': 'item is not in db'}
-
-        async with self.request.app['db_engine'].acquire() as conn:
-            result = await extensions.update(conn, name, bool(data['is_active']))
-            return {'info': result}
+        try:
+            data = await self.request.post()
+            name = self.request.match_info['name']
+            is_active = data['is_active']
+            async with self.request.app['db_engine'].acquire() as conn:
+                result = await data_access.update(conn, name, bool(is_active))
+        except KeyError:
+            _logger.exception('Missing key parameter.')
+            return {'status_code': 404}
+        else:
+            return result
