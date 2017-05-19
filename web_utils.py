@@ -21,6 +21,11 @@ def async_json_out(orig_method=None, *, status=200, content_type='application/js
         if iscoroutine(dict_resp):
             dict_resp = await dict_resp
 
+        try:
+            status = dict_resp['status']
+        except KeyError:
+            dict_resp['status'] = status
+
         return json_response(
             dict_resp,
             status=status,
