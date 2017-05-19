@@ -41,7 +41,7 @@ async def build_application():
     _logger.info('DB Engine configured.')
 
     app.router.add_route('*', r'/api/v1/features/', Flag)
-    app.router.add_route('*', r'/api/v1/features/{name}/', GetOneFlag)
+    app.router.add_route('*', r'/api/v1/features/{name}', GetOneFlag)
     _logger.info('Routes configured.')
 
     return app
