@@ -5,12 +5,12 @@ from aiohttp import web
 from db.models import FeatureFlag
 
 _logger = logging.getLogger(__name__)
-table = FeatureFlag.__table__
+ff_table = FeatureFlag.__table__
 
 
 async def get_flags(conn):
     flags = await conn.execute(
-        table.select()
+        ff_table.select()
     )
     result = await flags.fetchall()
     return [{'id': i['id'],
@@ -21,7 +21,7 @@ async def get_flags(conn):
 async def set_flag(conn, name, is_active):
     async with conn.begin():
         try:
-            await conn.execute(table
+            await conn.execute(ff_table
                                .insert().values(name=name,
                                                 is_active=is_active))
         except Exception:
@@ -32,7 +32,7 @@ async def set_flag(conn, name, is_active):
 
 async def get_flag_by_name(conn, name):
     flag = await conn.execute(
-        table.select().where(FeatureFlag.name == name)
+        ff_table.select().where(FeatureFlag.name == name)
     )
     result = await flag.fetchone()
     if result is None:
@@ -45,7 +45,7 @@ async def get_flag_by_name(conn, name):
 
 async def delete(conn, name):
     async with conn.begin():
-        await conn.execute(table.
+        await conn.execute(ff_table.
                            delete().
                            where(FeatureFlag.name == name))
     return {'status_code': 200}
@@ -53,7 +53,7 @@ async def delete(conn, name):
 async def update(conn, name, is_active):
     async with conn.begin():
         await conn.execute(
-                table.
+                ff_table.
                 update().
                 where(FeatureFlag.name == name).
                 values({'is_active': is_active})
