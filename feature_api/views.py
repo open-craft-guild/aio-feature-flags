@@ -15,14 +15,14 @@ _logger = logging.getLogger(__name__)
 class Flag(View):
     """Feature flag endpoint."""
 
-    @async_json_out
+    @async_json_out(status=201)  # Ok
     async def get(self):
         """Return list of existed flags."""
         async with self.request.app['db_engine'].acquire() as conn:
             flags = await data_access.get_flags(conn)
-        return {'items': flags, 'status_code': 200}
+        return {'items': flags}
 
-    @async_json_out
+    @async_json_out(status=201)  # Created
     async def post(self):
         """Create new flag."""
         try:
@@ -31,14 +31,16 @@ class Flag(View):
             is_active = data['is_active']
             async with self.request.app['db_engine'].acquire() as conn:
                 result = await data_access.set_flag(conn, name, bool(is_active))
-        except KeyError:
-            _logger.exception('Missing key parameter.')
-            return {'status_code': 400}
-        except RuntimeError:
-            _logger.exception('Error while writing to DB.')
-            return {'status_code': 403}
+        except KeyError as ke:
+            err_msg = 'Missing key parameter.'
+            _logger.exception(err_msg)
+            raise web.HTTPBadRequest(body=err_msg) from ke  # 400 Bad Request status built-in
+        except RuntimeError as re:  # FIXME: consider moving handling of such errors to decorator
+            err_msg = 'Error while writing to DB.'
+            _logger.exception(err_msg)
+            raise web.HTTPInternalServerError(body=err_msg) from re  # 500 Internal Server Error embedded
         else:
-            return result
+            return result  # FIXME: normally, the location of new resource must be returned
 
 
 class GetOneFlag(View):

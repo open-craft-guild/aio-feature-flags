@@ -28,7 +28,8 @@ async def set_flag(conn, name, is_active):
             _logger.exception('Transaction failed.')
             raise RuntimeError
         else:
-            return {'status_code': 201}
+            return {}  # FIXME: Ideally, this should return created item
+
 
 async def get_flag_by_name(conn, name):
     flag = await conn.execute(
@@ -43,12 +44,14 @@ async def get_flag_by_name(conn, name):
                      'is_active': result['is_active']},
             'status_code': 200}
 
+
 async def delete(conn, name):
     async with conn.begin():
         await conn.execute(ff_table.
                            delete().
                            where(FeatureFlag.name == name))
     return {'status_code': 200}
+
 
 async def update(conn, name, is_active):
     async with conn.begin():
