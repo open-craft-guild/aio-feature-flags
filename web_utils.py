@@ -3,7 +3,10 @@
 from functools import partial, wraps
 from inspect import iscoroutine
 
-from aiohttp.web import json_response
+from aiohttp.web import (
+    json_response, HTTPError,
+    HTTPSuccessful, HTTPRedirection
+)
 
 
 def async_json_out(orig_method=None, *, status=200, content_type='application/json', **dec_kwargs):
@@ -16,10 +19,21 @@ def async_json_out(orig_method=None, *, status=200, content_type='application/js
 
     @wraps(orig_method)
     async def wrapper(*args, **kwargs):
-        dict_resp = orig_method(*args, **kwargs)
+        try:
+            dict_resp = orig_method(*args, **kwargs)
 
-        if iscoroutine(dict_resp):
-            dict_resp = await dict_resp
+            if iscoroutine(dict_resp):
+                dict_resp = await dict_resp
+        except (HTTPSuccessful, HTTPRedirection):
+            raise
+        except HTTPError as he:
+            if he.empty_body:
+                raise
+
+            status = he.status_code,
+            dict_resp = {
+                'error': he.body,
+            }
 
         try:
             status = dict_resp['status']
