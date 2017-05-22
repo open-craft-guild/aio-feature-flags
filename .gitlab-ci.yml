@@ -4,8 +4,9 @@ before_script:
   - pip install -c requirements/constraints.txt -r requirements/linters.txt -r requirements/test.txt -r requirements/common.txt
   - pre-commit install-hooks
 
+lint:
+  # basically just run pre-commit linters
+  script: pre-commit run --all-files
+
 test:
-  script:
-    # basically just run pre-commit linters
-    - pre-commit run --all-files
-    - py.test
+  script: py.test
