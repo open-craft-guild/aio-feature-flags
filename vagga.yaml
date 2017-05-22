@@ -94,6 +94,8 @@ containers:
     - !Env
       <<: *env_vars
     - !Container features
+    # Rebuild this container on pre-commit config change
+    - !Depends .pre-commit-config.yaml
     - !BuildDeps *app-build-deps
     # Git is needed for pre-commit in runtime. Ref:
     # github.com/pre-commit/pre-commit/issues/456#issuecomment-269653630
