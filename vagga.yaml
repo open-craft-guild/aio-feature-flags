@@ -99,6 +99,7 @@ containers:
     # github.com/pre-commit/pre-commit/issues/456#issuecomment-269653630
     - !Install [git]
     - !Py3Requirements requirements/linters.txt
+    - !Py3Requirements requirements/test.txt
     - !Sh HOME=/root pre-commit install-hooks
 
 commands:
@@ -249,3 +250,13 @@ commands:
     description: Run pre-commit for against the repo
     container: test
     run: pre-commit run --all-files
+
+  py.test: !Command
+    description: Run py.test
+    container: test
+    run: [py.test]
+
+  test: !Command
+    description: Run tests
+    container: test
+    run: py.test
