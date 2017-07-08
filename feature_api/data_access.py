@@ -21,14 +21,14 @@ async def get_flags(conn):
 async def set_flag(conn, name, is_active):
     async with conn.begin():
         try:
-            await conn.execute(ff_table
-                               .insert().values(name=name,
-                                                is_active=is_active))
+            res = await conn.execute(ff_table
+                                     .insert().values(name=name,
+                                                      is_active=is_active))
         except Exception:
             _logger.exception('Transaction failed.')
             raise RuntimeError
         else:
-            return {}  # FIXME: Ideally, this should return created item
+            return {'item': res}
 
 
 async def get_flag_by_name(conn, name):

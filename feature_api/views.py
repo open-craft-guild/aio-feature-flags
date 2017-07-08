@@ -12,10 +12,10 @@ from . import data_access
 _logger = logging.getLogger(__name__)
 
 
-class Flag(View):
+class FeatureFlagsCollection(View):
     """Feature flag endpoint."""
 
-    @async_json_out(status=201)  # Ok
+    @async_json_out(status=200)  # Ok
     async def get(self):
         """Return list of existed flags."""
         async with self.request.app['db_engine'].acquire() as conn:
@@ -40,10 +40,10 @@ class Flag(View):
             _logger.exception(err_msg)
             raise web.HTTPInternalServerError(body=err_msg) from re  # 500 Internal Server Error embedded
         else:
-            return result  # FIXME: normally, the location of new resource must be returned
+            return result
 
 
-class GetOneFlag(View):
+class FeatureFlag(View):
     """Work with only one flag not a sequence."""
 
     @async_json_out
@@ -75,14 +75,13 @@ class GetOneFlag(View):
 
     @async_json_out
     async def patch(self):
-        try:
-            data = await self.request.post()
-            name = self.request.match_info['name']
-            is_active = data['is_active']
-            async with self.request.app['db_engine'].acquire() as conn:
-                result = await data_access.update(conn, name, bool(is_active))
-        except KeyError:
-            _logger.exception('Missing key parameter.')
+        data = await self.request.post()
+        name = self.request.match_info['name']
+        is_active = data.get('is_active')
+        if is_active is None:
             return {'status_code': 404}
-        else:
-            return result
+
+        async with self.request.app['db_engine'].acquire() as conn:
+            result = await data_access.update(conn, name, bool(is_active))
+
+        return result
