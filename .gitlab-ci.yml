@@ -3,6 +3,7 @@ before_script:
   # installing pre-commit
   - pip install -c requirements/constraints.txt -r requirements/linters.txt -r requirements/test.txt -r requirements/common.txt
   - pre-commit install-hooks
+  - docker info
 
 lint:
   # basically just run pre-commit linters
@@ -10,3 +11,8 @@ lint:
 
 test:
   script: py.test
+
+build_image:
+  script:
+  - docker build -t vagga-image
+  - docker run vagga-image /bin/echo testiing
