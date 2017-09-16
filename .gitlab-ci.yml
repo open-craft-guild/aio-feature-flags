@@ -10,3 +10,7 @@ lint:
 
 test:
   script: py.test
+
+vagga:test:
+  image: tailhook/vagga:v0.7.2-93-g0884e15
+  script: vagga test
