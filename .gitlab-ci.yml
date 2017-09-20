@@ -19,8 +19,14 @@ vagga:build:
   stage: build
   # basically just run pre-commit linters
   script:
+  - cp -v .gitlab/.vagga.yaml ~/
   - vagga _build test &
+  - test_build_pid=$!
   - vagga _build mysql &
+  - mysql_build_pid=$!
+  - "{ wait $test_build_pid; vagga _push_image features } &"
+  - "{ wait $test_build_pid; vagga _push_image test } &"
+  - "{ wait $mysql_build_pid; vagga _push_image mysql } &"
   - wait
   artifacts:
     paths:

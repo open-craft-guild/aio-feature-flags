@@ -41,6 +41,7 @@ containers:
       DB_PASSWORD: mysql
       DB_HOST: 127.0.0.1
       DB_PORT: 3308
+    image-cache-url: &cache_url .gitlab/containers/${container_name}.${short_hash}.tar.xz
     setup:
     - !Env
       <<: *env_vars
@@ -69,6 +70,7 @@ containers:
     environ:
       <<: *env_vars
       DB_DATA_DIR: /data
+    image-cache-url: *cache_url
     setup:
     - !Env
       <<: *env_vars
@@ -90,6 +92,7 @@ containers:
   test:
     environ:
       <<: *env_vars
+    image-cache-url: *cache_url
     setup:
     - !Env
       <<: *env_vars
