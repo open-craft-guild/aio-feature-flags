@@ -11,6 +11,10 @@ before_script:
 - export MYSQL_SHASH=`vagga _version_hash --short mysql`
 - "echo Features: $FEATURES_SHASH; Test: $TEST_SHASH; MySQL: $MYSQL_SHASH."
 
+cache:
+  paths:
+  - .gitlab/containers
+
 vagga:build:
   stage: build
   # basically just run pre-commit linters
@@ -18,6 +22,10 @@ vagga:build:
   - vagga _build test &
   - vagga _build mysql &
   - wait
+  artifacts:
+    paths:
+    - .gitlab/containers
+  cache: []
 
 vagga:lint:
   stage: test
