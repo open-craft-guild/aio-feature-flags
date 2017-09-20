@@ -31,7 +31,7 @@ vagga:build:
   artifacts:
     paths:
     - .gitlab/containers
-  cache: []
+  cache: {}
 
 vagga:lint:
   stage: test
