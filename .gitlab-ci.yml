@@ -9,7 +9,7 @@ before_script:
 - export FEATURES_SHASH=`vagga _version_hash --short features`
 - export TEST_SHASH=`vagga _version_hash --short test`
 - export MYSQL_SHASH=`vagga _version_hash --short mysql`
-- "echo Features: $FEATURES_SHASH; Test: $TEST_SHASH; MySQL: $MYSQL_SHASH."
+- "echo Features: $FEATURES_SHASH\\; Test: $TEST_SHASH\\; MySQL: $MYSQL_SHASH."
 
 cache:
   paths:
