@@ -24,9 +24,9 @@ vagga:build:
   - test_build_pid=$!
   - vagga _build mysql &
   - mysql_build_pid=$!
-  - "{ wait $test_build_pid; vagga _push_image features } &"
-  - "{ wait $test_build_pid; vagga _push_image test } &"
-  - "{ wait $mysql_build_pid; vagga _push_image mysql } &"
+  - "( wait $test_build_pid; vagga _push_image features ) &"
+  - "( wait $test_build_pid; vagga _push_image test ) &"
+  - "( wait $mysql_build_pid; vagga _push_image mysql ) &"
   - wait
   artifacts:
     paths:
