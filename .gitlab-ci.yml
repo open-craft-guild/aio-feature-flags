@@ -1,17 +1,28 @@
-image: 'python:3.6.1'
+image: tailhook/vagga:v0.7.2-93-g0884e15
+
+stages:
+- build
+- test
+- deploy
+
 before_script:
-  # installing pre-commit
-  - pip install -c requirements/constraints.txt -r requirements/linters.txt -r requirements/test.txt -r requirements/common.txt
-  - pre-commit install-hooks
+- export FEATURES_SHASH=`vagga _version_hash --short features`
+- export TEST_SHASH=`vagga _version_hash --short test`
+- export MYSQL_SHASH=`vagga _version_hash --short mysql`
 
-lint:
+vagga:build:
+  stage: build
   # basically just run pre-commit linters
-  script: pre-commit run --all-files
+  script:
+  - vagga _build test &
+  - vagga _build mysql &
+  - wait
 
-test:
-  script: py.test
+vagga:lint:
+  stage: test
+  # basically just run pre-commit linters
+  script: vagga lint
 
 vagga:test:
-  image: tailhook/vagga:v0.7.2-93-g0884e15
-  before_script: []
+  stage: test
   script: vagga test
