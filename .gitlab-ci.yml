@@ -19,6 +19,8 @@ vagga:build:
   stage: build
   # basically just run pre-commit linters
   script:
+  - cp -v .gitlab/.vagga.yaml ~
+  - cp -v .gitlab/.vagga.yaml /root/
   - cp -v .gitlab/.vagga.yaml .vagga.settings.yaml
   - vagga _build test &
   - test_build_pid=$!
