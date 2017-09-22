@@ -21,7 +21,6 @@ vagga:build:
   script:
   - cp -v .gitlab/.vagga.yaml ~
   - cp -v .gitlab/.vagga.yaml /root/
-  - cp -v .gitlab/.vagga.yaml .vagga.settings.yaml
   - vagga _build test &
   - test_build_pid=$!
   - vagga _build mysql &
