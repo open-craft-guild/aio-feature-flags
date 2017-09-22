@@ -20,6 +20,7 @@ vagga:build:
   # basically just run pre-commit linters
   script:
   - cp -v .gitlab/.vagga.yaml ~
+  - mkdir /root/
   - cp -v .gitlab/.vagga.yaml /root/.vagga.yaml
   - env
   - export
