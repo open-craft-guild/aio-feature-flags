@@ -27,10 +27,10 @@ vagga:build:
   - test_build_pid=$!
   - vagga _build mysql &
   - mysql_build_pid=$!
-  - "( wait $test_build_pid; vagga _push_image features ) &"
-  - "( wait $test_build_pid; vagga _push_image test ) &"
   - wait
-  - RUST_LOG=debug vagga _push_image mysql
+  - vagga _push_image mysql
+  - vagga _push_image features
+  - vagga _push_image test
   artifacts:
     paths:
     - .gitlab/containers
