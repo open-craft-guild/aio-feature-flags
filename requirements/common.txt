@@ -1,5 +1,5 @@
 aio-manager[mysql]==2.0.0
 aio-yamlconfig==0.2.0
 aiohttp==2.0.4
-aiomysql==0.0.9
+aiomysql==0.0.16
 setuptools==34.3.3
