@@ -13,7 +13,7 @@ multidict==2.1.4
 nodeenv==1.1.2
 packaging==16.8
 pre-commit==0.12.2
-PyMySQL==0.7.10
+PyMySQL==0.8.1
 pyparsing==2.2.0
 PyYAML==3.12
 setuptools==34.3.3
