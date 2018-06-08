@@ -1,4 +1,4 @@
-aio-manager==2.0.0
+aio-manager==2.0.3
 aio-yamlconfig==0.2.0
 aiohttp==2.0.4
 aiomysql==0.0.9
