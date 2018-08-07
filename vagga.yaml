@@ -3,6 +3,7 @@ containers:
   app-freezer:
     setup:
     - !Alpine v3.5
+    - !BuildDeps [libffi-dev, openssl-dev]
     # freeze common deps versions:
     - !Py3Install
       - aiohttp >=2.0,<2.1
