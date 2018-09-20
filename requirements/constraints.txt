@@ -19,7 +19,7 @@ pycparser==2.18
 PyMySQL==0.9.2
 PyYAML==3.13
 six==1.11.0
-SQLAlchemy==1.2.10
+SQLAlchemy==1.2.12
 trafaret==1.2.0
 virtualenv==16.0.0
 yarl==0.10.3
